@@ -1,4 +1,5 @@
 # Import libraries 
+import imageio
 from gym import Env
 from gym.spaces import Discrete, Box
 from PIL import Image, ImageDraw
@@ -12,13 +13,18 @@ class SnakeEnv(Env):
         self.board_width = 30
         self.board_height = 20
 
-        # Actions: UP, RIGHT, DOWN, LEFT
-        self.action_space = Discrete(4)
+        # Board integers meaning:
+        # 0: Air
+        # 1: Snake
+        # 2: Food
+
+        # Actions: From snake direction go left, up or right
+        self.action_space = Discrete(3)
         self.actions = {
-            0: [-1, 0],
-            1: [0, 1],
-            2: [1, 0],
-            3: [0, -1]
+            0: [-1, 0], # Up
+            1: [0, 1],  # Right
+            2: [1, 0],  # Down
+            3: [0, -1]  # Left
         }
 
         # Observastion space
@@ -29,12 +35,21 @@ class SnakeEnv(Env):
 
 
     def step(self, action):
+        # Update the gif
+        self.gif.append(self.render())
+
         # Reward for staying alive is -1
         # (To stimulate getting to food as fast as possible)
         reward = -1
 
         # The direction of the snake
-        direction = self.actions[action]
+        directional_actions = [self.actions[i] for i in self.actions]
+        del directional_actions[self.snake_direction -2]
+
+        direction = directional_actions[action]
+
+        # Set new snake direction
+        self.snake_direction = [i for i in self.actions if self.actions[i] == direction][0]
         
         # The new position of the snake head
         new_pos = [self.snake[0][i] + direction[i] for i in range(len(direction))]
@@ -97,6 +112,7 @@ class SnakeEnv(Env):
         self.game_step += 1
         return self.board, reward, False
 
+
     def reset(self):
         # Create the board and snake with a random starting position
         self.board = [[0 for j in range(self.board_width)] for i in range(self.board_height)]
@@ -111,13 +127,20 @@ class SnakeEnv(Env):
         # Spawn the food
         self.spawn_food()
 
+        # Reset snake direction
+        self.snake_direction = 0
+
+        # Reset gif
+        self.gif = []
+
         return self.board
 
 
     def render(self):
         color_dictionary = {
             1: (124,252,0),
-            2: (139, 0, 0)
+            2: (139, 0, 0),
+            3: (75, 150, 2)
         }
         cell_size = 100
 
@@ -127,12 +150,21 @@ class SnakeEnv(Env):
 
         # Draw the food and snake
         for y, row in enumerate(self.board):
-            for x, cell in enumerate(row):
-                if cell != 0:
+            for x, color in enumerate(row):
+                if color != 0:
+                    # Check if it's the head of the snake
+                    if [y, x] == self.snake[0]:
+                        color = 3
+
                     shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
-                    draw.rectangle(shape, fill=color_dictionary[cell])
+                    draw.rectangle(shape, fill=color_dictionary[color])
 
         return image
+
+    def render_gif(self):
+        imageio.mimsave("game.gif", self.gif)
+        print("gif saved")
+
 
     def spawn_food(self):
         # Get all open cells
