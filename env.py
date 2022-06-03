@@ -1,5 +1,6 @@
-# Import libraries 
+# Import libraries
 import imageio
+import numpy as np
 from gym import Env
 from gym.spaces import Discrete, Box
 from PIL import Image, ImageDraw
@@ -17,6 +18,12 @@ class SnakeEnv(Env):
         # 0: Air
         # 1: Snake
         # 2: Food
+
+        # Reward table
+        self.base_reward = 1
+        self.food_reward = 30
+        self.game_over_reward = -10000
+        self.game_win_reward = 10000
 
         # Actions: From snake direction go left, up or right
         self.action_space = Discrete(3)
@@ -38,9 +45,8 @@ class SnakeEnv(Env):
         # Update the gif
         self.gif.append(self.render())
 
-        # Reward for staying alive is -1
-        # (To stimulate getting to food as fast as possible)
-        reward = -1
+        # Will fiddle with base reward
+        reward = self.base_reward
 
         # The direction of the snake
         directional_actions = [self.actions[i] for i in self.actions]
@@ -59,23 +65,23 @@ class SnakeEnv(Env):
         if y < 0 or y >= self.board_height or x < 0 or x >= self.board_width:
             # Illegal
             done = True
-            reward = float("-inf")
-            return self.board, reward, done
+            reward += self.game_over_reward
+            return self.state(), reward, done
 
 
         # Check if the snake hits itself
         elif self.board[y][x] == 1:
             # Game over
             done = True
-            reward = float("-inf")
-            return self.board, reward, done
+            reward += self.game_over_reward
+            return self.state(), reward, done
 
 
         # Check if snake is eating an apple
         elif self.board[y][x] == 2:
             # If snake has eaten an apple, don't remove tail. (So it's length increases)
             done = False
-            reward += 30
+            reward += self.food_reward
             food_spawn_success = self.spawn_food()
         
         else:
@@ -91,13 +97,13 @@ class SnakeEnv(Env):
         # (If False it can't spawn food because snake takes up the whole board)
         if not food_spawn_success:
             done = True
-            reward = float("inf")
-            return self.board, reward, done
+            reward += self.game_win_reward
+            return self.state(), reward, done
 
         # Check if game_step is equal to max_game_step
         elif self.game_step == self.max_game_length:
             done = True
-            return self.board, reward, done
+            return self.state(), reward, done
 
         # Insert the new head
         self.snake.insert(0, new_pos)
@@ -110,13 +116,16 @@ class SnakeEnv(Env):
         # If it hasnt returned yet then the game is ready for next step
         # Finally increase game_step
         self.game_step += 1
-        return self.board, reward, False
+        return self.state(), reward, False
 
+
+    def state(self):
+        return np.array(self.board).flatten()
 
     def reset(self):
         # Create the board and snake with a random starting position
         self.board = [[0 for j in range(self.board_width)] for i in range(self.board_height)]
-        self.snake = [[randint(0, self.board_height-1), randint(0, self.board_width-1)]]
+        self.snake = [[10, 15]]#[[randint(3, self.board_height-4), randint(3, self.board_width-4)]] # Atleast 3 cells off any sides
 
         # Create the gamestep
         self.game_step = 0
@@ -127,13 +136,13 @@ class SnakeEnv(Env):
         # Spawn the food
         self.spawn_food()
 
-        # Reset snake direction
-        self.snake_direction = 0
+        # Set random snake direction
+        self.snake_direction = 0 #randint(0, 4)
 
         # Reset gif
         self.gif = []
 
-        return self.board
+        return self.state()
 
 
     def render(self):
