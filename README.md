@@ -1,6 +1,8 @@
-# Snake ML
+# Snake ML.
  Applying machine learning (Deep Reinforcement Learning) to the widely known Snake game
 
+
+# Planning.
 Plan currently is to have 2 Q Learning tables.
 A large state table and a small one.
 
@@ -9,7 +11,8 @@ Small would take list of variables that holds information about position, danger
 
 In training when the large state is unknown in the table we look at the smaller state table to stimulate more positive actions.
 
-- Tasks
+
+# Tasks.
 * Quantify states
 First we quantify the states into an index that the tables will use.
 This is done by creating a seperate table that will contain all previous seen states and uses said index for the Q learning tables.
@@ -24,3 +27,5 @@ Next we train both Q learning tables simultaneously in the enviroment by allowin
 
 * Evaluation
 Lastly we evaluate the models and recording my findings.
+
+# Findings and learning points.
