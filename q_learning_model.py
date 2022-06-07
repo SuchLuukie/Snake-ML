@@ -20,9 +20,10 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 5000
+        self.training_size = 10
 
         self.train()
+        self.evaluate()
 
 
     def train(self):
@@ -81,7 +82,42 @@ class QLearningModel:
     
 
     def evaluate(self):
-        return
+        episodes = 10
+        average = 0
+        for episode in range(episodes):
+            score, done, large_state, small_state = 0, False, self.env.reset()
+            while not done:
+                # Get table indexes for the given states
+                large_state_index, small_state_index = self.get_states_index(large_state, small_state)
+
+                # Get the actions for the given states
+                large_state_actions = self.large_q_table[large_state_index]
+                small_state_actions = self.small_q_table[small_state_index]
+
+                # If large state actions are all 0 then look at small_state actions
+                if len([i for i in large_state_actions if i != 0]) == 0:
+                    action = np.argmax(small_state_actions)
+                
+                # Otherwise just use the large state actions
+                else:
+                    action = np.argmax(large_state_actions)
+
+                # Take the step in the env
+                large_state, small_state, reward, done = self.env.step(action)
+
+                # Apply reward
+                score += reward
+
+            # Add to the average
+            average += score
+
+            # Print episode score
+            print(f"Episode: {episode}, Score: {score}")
+            self.env.render_gif()
+        
+        # Calculate and print average score
+        average = average / self.episodes
+        print(f"Episodes average: {average}")
 
 
     def get_states_index(self, large_state, small_state):

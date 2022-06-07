@@ -208,7 +208,6 @@ class SnakeEnv(Env):
     def states(self):
         large_state = [self.snake_direction, self.board]
         small_state = [self.snake_direction] + self.dangers() + self.food_direction()
-        print(small_state)
         return large_state, small_state
 
     def dangers(self):
