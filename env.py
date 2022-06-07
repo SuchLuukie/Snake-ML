@@ -1,4 +1,5 @@
 # Import libraries
+from cgitb import small
 import imageio
 import numpy as np
 from gym import Env
@@ -22,6 +23,7 @@ class SnakeEnv(Env):
         # Reward table
         self.base_reward = 1
         self.food_reward = 30
+        self.food_distance_penalty = -1
         self.game_over_reward = -10000
         self.game_win_reward = 10000
 
@@ -45,9 +47,8 @@ class SnakeEnv(Env):
         # Update the gif
         self.gif.append(self.render())
 
-        # Will fiddle with base reward
-        reward = self.base_reward
 
+        # ------ Snake direction and new pos ------
         # The direction of the snake
         directional_actions = [self.actions[i] for i in self.actions]
         del directional_actions[self.snake_direction -2]
@@ -60,13 +61,29 @@ class SnakeEnv(Env):
         # The new position of the snake head
         new_pos = [self.snake[0][i] + direction[i] for i in range(len(direction))]
 
+
+        # ------ Reward ------
+        # Will fiddle with base reward
+        reward = self.base_reward
+
+        # Calculate food distance penalty
+        dy, dx = [new_pos[0] - self.food_location[0], new_pos[1] - self.food_location[1]]
+        
+        # Get the absolute distance (Positive)
+        distance = abs(dy) + abs(dx)
+
+        # Calculate and apply penalty
+        penalty = distance * self.food_distance_penalty
+        reward += penalty
+
+
         y, x = new_pos
         # Check if move is inside the board
         if y < 0 or y >= self.board_height or x < 0 or x >= self.board_width:
             # Illegal
             done = True
             reward += self.game_over_reward
-            return self.state(), reward, done
+            return self.states(), reward, done
 
 
         # Check if the snake hits itself
@@ -74,7 +91,7 @@ class SnakeEnv(Env):
             # Game over
             done = True
             reward += self.game_over_reward
-            return self.state(), reward, done
+            return self.states(), reward, done
 
 
         # Check if snake is eating an apple
@@ -98,12 +115,12 @@ class SnakeEnv(Env):
         if not food_spawn_success:
             done = True
             reward += self.game_win_reward
-            return self.state(), reward, done
+            return self.states(), reward, done
 
         # Check if game_step is equal to max_game_step
         elif self.game_step == self.max_game_length:
             done = True
-            return self.state(), reward, done
+            return self.states(), reward, done
 
         # Insert the new head
         self.snake.insert(0, new_pos)
@@ -116,11 +133,8 @@ class SnakeEnv(Env):
         # If it hasnt returned yet then the game is ready for next step
         # Finally increase game_step
         self.game_step += 1
-        return self.state(), reward, False
+        return self.states(), reward, False
 
-
-    def state(self):
-        return np.array(self.board).flatten()
 
     def reset(self):
         # Create the board and snake with a random starting position
@@ -142,7 +156,7 @@ class SnakeEnv(Env):
         # Reset gif
         self.gif = []
 
-        return self.state()
+        return self.states()
 
 
     def render(self):
@@ -170,9 +184,10 @@ class SnakeEnv(Env):
 
         return image
 
-    def render_gif(self):
-        imageio.mimsave("game.gif", self.gif)
-        print("gif saved")
+    def render_gif(self, location = "game.gif"):
+        print("[!] Saving gif")
+        imageio.mimsave(location, self.gif)
+        print("[!] Gif saved")
 
 
     def spawn_food(self):
@@ -186,5 +201,16 @@ class SnakeEnv(Env):
         # If there are open cells, pick random one and make it food
         else:
             y, x = choice(open_cells)
+            self.food_location = [y, x]
             self.board[y][x] = 2
             return True
+
+
+    def states(self):
+        large_state = [self.snake_direction, self.board]
+        small_state = [
+            self.snake_direction
+            # dangers
+            # Food
+        ]
+        return large_state, small_state
