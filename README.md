@@ -1,5 +1,5 @@
 # Snake ML.
- Applying machine learning (Deep Reinforcement Learning) to the widely known Snake game
+ Applying machine learning (Q Learning) to the widely known Snake game
 
 
 # Planning.
@@ -29,3 +29,8 @@ Next we train both Q learning tables simultaneously in the enviroment by allowin
 Lastly we evaluate the models and recording my findings.
 
 # Findings and learning points.
+(TODO)
+
+# Showcase
+* Random Actions
+<img src="/gifs/random_actions.gif" width="450" height="300"/>
