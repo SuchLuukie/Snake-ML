@@ -20,9 +20,14 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 10
+        self.training_size = 500
 
+        # Train the model
+        print("[!] Training Q Learning Model")
         self.train()
+
+        print("[!] Evaluating Q Learning Model")
+        self.episodes = 10
         self.evaluate()
 
 
@@ -77,15 +82,18 @@ class QLearningModel:
                 large_state = next_large_state
                 small_state = next_small_state
         
-        if i % 100 == 0:
-            print(f"Training Episode: {i}")
+            if i % 25 == 0:
+                print(f"Training Episode: {i}")
     
 
     def evaluate(self):
-        episodes = 10
+        episode_dict = {}
         average = 0
-        for episode in range(episodes):
-            score, done, large_state, small_state = 0, False, self.env.reset()
+        for episode in range(self.episodes):
+            self.env = SnakeEnv()
+            large_state, small_state = self.env.reset()
+            score, done = 0, False
+
             while not done:
                 # Get table indexes for the given states
                 large_state_index, small_state_index = self.get_states_index(large_state, small_state)
@@ -113,11 +121,27 @@ class QLearningModel:
 
             # Print episode score
             print(f"Episode: {episode}, Score: {score}")
-            self.env.render_gif()
+
+            # Add to dictionary
+            episode_dict.update({
+                episode: {
+                    "env": self.env,
+                    "score": score
+                }
+            })
         
         # Calculate and print average score
         average = average / self.episodes
         print(f"Episodes average: {average}")
+
+        # Get the best score
+        best_episode = episode_dict[0]
+        for episode in episode_dict:
+            if episode_dict[episode]["score"] > best_episode["score"]:
+                best_episode = episode_dict[episode]
+
+        print("[!] Best episode score: {}".format(best_episode["score"]))
+        best_episode["env"].render_gif()
 
 
     def get_states_index(self, large_state, small_state):

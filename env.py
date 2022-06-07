@@ -20,8 +20,8 @@ class SnakeEnv(Env):
         # 2: Food
 
         # Reward table
-        self.base_reward = 1
-        self.food_reward = 30
+        self.base_reward = -1
+        self.food_reward = 100
         self.food_distance_penalty = -1
         self.game_over_reward = -10000
         self.game_win_reward = 10000
@@ -45,7 +45,6 @@ class SnakeEnv(Env):
     def step(self, action):
         # Update the gif
         self.gif.append(self.render())
-
 
         # ------ Snake direction and new pos ------
         # The direction of the snake
@@ -82,7 +81,7 @@ class SnakeEnv(Env):
             # Illegal
             done = True
             reward += self.game_over_reward
-            return self.states(), reward, done
+            return self.states() + [reward, done]
 
 
         # Check if the snake hits itself
@@ -90,7 +89,7 @@ class SnakeEnv(Env):
             # Game over
             done = True
             reward += self.game_over_reward
-            return self.states(), reward, done
+            return self.states() + [reward, done]
 
 
         # Check if snake is eating an apple
@@ -109,20 +108,20 @@ class SnakeEnv(Env):
             self.snake.pop()
             self.board[tail[0]][tail[1]] = 0
 
+        # Insert the new head
+        self.snake.insert(0, new_pos)
+        
         # Check if the game is over by the food spawn succes
         # (If False it can't spawn food because snake takes up the whole board)
         if not food_spawn_success:
             done = True
             reward += self.game_win_reward
-            return self.states(), reward, done
+            return self.states() + [reward, done]
 
         # Check if game_step is equal to max_game_step
-        elif self.game_step == self.max_game_length:
+        if self.game_step == self.max_game_length:
             done = True
-            return self.states(), reward, done
-
-        # Insert the new head
-        self.snake.insert(0, new_pos)
+            return self.states() + [reward, done]
 
         # Update snake onto board
         for pos in self.snake:
@@ -132,7 +131,7 @@ class SnakeEnv(Env):
         # If it hasnt returned yet then the game is ready for next step
         # Finally increase game_step
         self.game_step += 1
-        return self.states(), reward, False
+        return self.states() + [reward, False]
 
 
     def reset(self):
@@ -208,7 +207,7 @@ class SnakeEnv(Env):
     def states(self):
         large_state = [self.snake_direction, self.board]
         small_state = [self.snake_direction] + self.dangers() + self.food_direction()
-        return large_state, small_state
+        return [large_state, small_state]
 
     def dangers(self):
         dangers = []
@@ -247,4 +246,25 @@ class SnakeEnv(Env):
         return dangers
 
     def food_direction(self):
-        return [[(self.snake[0][0] - self.food_location[0]) * -1, (self.snake[0][1] - self.food_location[1]) * -1]]
+        y_distance = (self.snake[0][0] - self.food_location[0]) * -1
+        x_distance = (self.snake[0][1] - self.food_location[1]) * -1
+
+        if y_distance > 0:
+            y = 1
+        
+        elif y_distance < 0:
+            y = -1
+        
+        else:
+            y = 0
+
+        if x_distance > 0:
+            x = 1
+
+        elif x_distance < 0:
+            x = -1
+        
+        else:
+            x = 0
+
+        return [[y, x]]
