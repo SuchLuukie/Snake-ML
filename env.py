@@ -1,5 +1,4 @@
 # Import libraries
-from cgitb import small
 import imageio
 import numpy as np
 from gym import Env
@@ -66,7 +65,7 @@ class SnakeEnv(Env):
         # Will fiddle with base reward
         reward = self.base_reward
 
-        # Calculate food distance penalty
+        # Calculate food distance
         dy, dx = [new_pos[0] - self.food_location[0], new_pos[1] - self.food_location[1]]
         
         # Get the absolute distance (Positive)
@@ -208,9 +207,45 @@ class SnakeEnv(Env):
 
     def states(self):
         large_state = [self.snake_direction, self.board]
-        small_state = [
-            self.snake_direction
-            # dangers
-            # Food
-        ]
+        small_state = [self.snake_direction] + self.dangers() + self.food_direction()
+        print(small_state)
         return large_state, small_state
+
+    def dangers(self):
+        dangers = []
+
+        # The direction of the snake
+        directional_actions = [self.actions[i] for i in self.actions]
+        del directional_actions[self.snake_direction -2]
+
+        # Snake head from where the danger is calculated
+        snake_head = self.snake[0]
+
+        for direction in directional_actions:
+            old_pos = snake_head
+            found_danger = False
+            danger_distance = 0
+
+            while not found_danger:
+                new_pos = [old_pos[0] + direction[0], old_pos[1] + direction[1]]
+                y, x = new_pos
+                
+                # Check if new pos is inside the board
+                if y < 0 or y >= self.board_height or x < 0 or x >= self.board_width:
+                    # Not in the board, so this is the danger
+                    dangers.append(danger_distance)
+                    found_danger = True
+
+                # Check if the new pos is occupied by the snake
+                elif self.board[y][x] == 1:
+                    # If it is occupied by the snake then it's the danger
+                    dangers.append(danger_distance)
+                    found_danger = True
+                
+                old_pos = new_pos
+                danger_distance += 1
+
+        return dangers
+
+    def food_direction(self):
+        return [[(self.snake[0][0] - self.food_location[0]) * -1, (self.snake[0][1] - self.food_location[1]) * -1]]
