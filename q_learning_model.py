@@ -21,15 +21,18 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 10
+        self.training_size = 1000
 
         # Train the model
         print("[!] Training Q Learning Model")
-        self.train()
-        self.write_small_to_file()
+        #self.train()
+        #self.write_small_to_file()
+
+        self.small_states_index = np.load("q_learning_files/small_states_index.npy", allow_pickle=True).tolist()
+        self.small_q_table = np.load("q_learning_files/small_q_table.npy", allow_pickle=True).tolist()
 
         print("[!] Evaluating Q Learning Model")
-        self.episodes = 25
+        self.episodes = 1
         self.evaluate()
 
 

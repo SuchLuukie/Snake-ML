@@ -27,7 +27,9 @@ class SnakeEnv(Env):
         self.game_over_reward = -10000
         self.game_win_reward = 10000
 
-        self.max_repeating_move = 8
+        self.max_repeating_move = 30
+        self.repeating_penalty_trigger = 8
+        self.repeating_penalty = -100
 
         # Actions: From snake direction go left, up or right
         self.action_space = Discrete(3)
@@ -91,11 +93,14 @@ class SnakeEnv(Env):
         else:
             # If it is a repeating move
             self.repeating_moves[1] += 1
-            if self.repeating_moves[1] == self.max_repeating_move and action != 1:
-                # Illegal
-                done = True
-                reward += self.game_over_reward
-                return self.states() + [reward, done]
+            if self.repeating_moves[1] >= self.repeating_penalty_trigger and action != 1:
+                # Discourage it
+                reward += self.repeating_penalty
+
+                if self.repeating_moves[1] == self.max_repeating_move:
+                    reward += self.game_over_reward
+                    done = True
+                    return self.states() + [reward, done]
 
 
         y, x = new_pos
@@ -240,6 +245,7 @@ class SnakeEnv(Env):
     def states(self):
         large_state = [self.snake_direction, self.board]
         small_state = [self.snake_direction] + self.food_direction() + self.dangers() + self.repeating_moves
+        print(small_state)
         return [large_state, small_state]
 
     def dangers(self):
