@@ -23,23 +23,26 @@ class SnakeEnv(Env):
         self.base_reward = 0
         self.food_reward = 100
         self.food_distance_reward = 5
+        self.food_consume_game_step_remove = -10
         self.game_over_reward = -10000
         self.game_win_reward = 10000
 
+        self.max_repeating_move = 8
+
         # Actions: From snake direction go left, up or right
         self.action_space = Discrete(3)
-        self.actions = {
-            0: [-1, 0], # Up
-            1: [0, 1],  # Right
-            2: [1, 0],  # Down
-            3: [0, -1]  # Left
-        }
+        self.actions = [
+            [-1, 0], # Up
+            [0, 1],  # Right
+            [1, 0],  # Down
+            [0, -1]  # Left
+        ]
 
         # Observastion space
         self.observation_space = Box(low=0, high=2, shape=(self.board_height, self.board_width))
 
         # Game max length (Amount of steps)
-        self.max_game_length = 500
+        self.max_game_length = 150
 
 
     def step(self, action):
@@ -47,14 +50,12 @@ class SnakeEnv(Env):
         self.gif.append(self.render())
 
         # ------ Snake direction and new pos ------
-        # The direction of the snake
-        directional_actions = [self.actions[i] for i in self.actions]
-        del directional_actions[self.snake_direction -2]
-
+        # The direction of the snake (Ordered by the currents snake direction)
+        directional_actions = [self.actions[self.snake_direction-1], self.actions[self.snake_direction], self.actions[self.snake_direction-3]]
         direction = directional_actions[action]
 
         # Set new snake direction
-        self.snake_direction = [i for i in self.actions if self.actions[i] == direction][0]
+        self.snake_direction = [i for i in range(len(self.actions)) if self.actions[i] == direction][0]
         
         # The new position of the snake head
         new_pos = [self.snake[0][i] + direction[i] for i in range(len(direction))]
@@ -83,6 +84,19 @@ class SnakeEnv(Env):
         # Set new food distance as the food distance
         self.food_distance = new_food_distance
 
+        # Check for repeating moves
+        if not action == self.repeating_moves[0]:
+            self.repeating_moves = [action, 0]
+
+        else:
+            # If it is a repeating move
+            self.repeating_moves[1] += 1
+            if self.repeating_moves[1] == self.max_repeating_move and action != 1:
+                # Illegal
+                done = True
+                reward += self.game_over_reward
+                return self.states() + [reward, done]
+
 
         y, x = new_pos
         # Check if move is inside the board
@@ -107,6 +121,7 @@ class SnakeEnv(Env):
             done = False
             reward += self.food_reward
             food_spawn_success = self.spawn_food()
+            self.game_step += self.food_consume_game_step_remove
         
         else:
             # Food spawn success is true if it didn't need to spawn food
@@ -166,6 +181,9 @@ class SnakeEnv(Env):
         # Get the absolute distance (Positive)
         self.food_distance = abs(dy) + abs(dx)
 
+        # Reset repeating moves
+        self.repeating_moves = [None, 0]
+
         # Reset gif
         self.gif = []
 
@@ -221,15 +239,14 @@ class SnakeEnv(Env):
 
     def states(self):
         large_state = [self.snake_direction, self.board]
-        small_state = [self.snake_direction] + self.dangers() + self.food_direction()
+        small_state = [self.snake_direction] + self.food_direction() + self.dangers() + [self.repeating_moves]
         return [large_state, small_state]
 
     def dangers(self):
         dangers = []
 
-        # The direction of the snake
-        directional_actions = [self.actions[i] for i in self.actions]
-        del directional_actions[self.snake_direction -2]
+        # The direction of the snake (Ordered by the currents snake direction)
+        directional_actions = [self.actions[self.snake_direction-1], self.actions[self.snake_direction], self.actions[self.snake_direction-3]]
 
         # Snake head from where the danger is calculated
         snake_head = self.snake[0]

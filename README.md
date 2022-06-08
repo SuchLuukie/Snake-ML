@@ -29,7 +29,9 @@ In training when the large state is unknown in the table we look at the smaller 
    Lastly I evaluate the models and record my findings.
 
 # Findings and learning points.
-(TODO)
+* Reward/Penalty Loop <br/>
+   One of the first things I noticed when training the Q Learning table was the snake being stuck in a loop,
+   It basically made the same move (For instance left) for the entirety of the game. I assume this was because of the food distance reward/penalty. It received a +1 reward for moving closer to food and -1 when moving away. This made the snake continuously seek that +1 -1 reward. 
 
 # Showcase
 * Random Actions

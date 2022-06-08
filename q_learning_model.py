@@ -1,5 +1,6 @@
 # Import files and libs
 from env import SnakeEnv
+from tqdm import tqdm
 import numpy as np
 import random
 
@@ -20,7 +21,7 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 500
+        self.training_size = 100
 
         # Train the model
         print("[!] Training Q Learning Model")
@@ -32,7 +33,7 @@ class QLearningModel:
 
 
     def train(self):
-        for i in range(self.training_size):
+        for i in tqdm(range(self.training_size)):
             self.env.reset()
             reward, done = 0, False
             large_state, small_state = self.env.states()
@@ -47,43 +48,41 @@ class QLearningModel:
 
                 # Exploit previously learned value
                 else:
-                    large_state_actions = self.large_q_table[large_state_index]
+                    #large_state_actions = self.large_q_table[large_state_index]
                     small_state_actions = self.small_q_table[small_state_index]
+                    action = np.argmax(small_state_actions)
 
                     # If large state actions are all 0 then look at small_state actions
-                    if len([i for i in large_state_actions if i != 0]) == 0:
-                        action = np.argmax(small_state_actions)
+                    #if len([i for i in large_state_actions if i != 0]) == 0:
+                    #    action = np.argmax(small_state_actions)
                     
                     # Otherwise just use the large state actions
-                    else:
-                        action = np.argmax(large_state_actions)
+                    #else:
+                    #    action = np.argmax(large_state_actions)
 
                 # Take the next step in the env
                 next_large_state, next_small_state, reward, done = self.env.step(action)
                 next_large_state_index, next_small_state_index = self.get_states_index(next_large_state, next_small_state)
 
                 # Old Q table values
-                old_large_value = self.large_q_table[large_state_index][action]
+                #old_large_value = self.large_q_table[large_state_index][action]
                 old_small_value = self.small_q_table[small_state_index][action]
 
                 # Next Q table values
-                next_large_max = max(self.large_q_table[next_large_state_index])
+                #next_large_max = max(self.large_q_table[next_large_state_index])
                 next_small_max = max(self.small_q_table[next_small_state_index])
 
                 # New values
-                new_large_value = (1 - self.alpha) * old_large_value + self.alpha * (reward + self.gamma * next_large_max)
+                #new_large_value = (1 - self.alpha) * old_large_value + self.alpha * (reward + self.gamma * next_large_max)
                 new_small_value = (1 - self.alpha) * old_small_value + self.alpha * (reward + self.gamma * next_small_max)
 
                 # Update new values
-                self.large_q_table[large_state_index][action] = new_large_value
+                #self.large_q_table[large_state_index][action] = new_large_value
                 self.small_q_table[small_state_index][action] = new_small_value
 
                 # Ready for next iteration
-                large_state = next_large_state
+                #large_state = next_large_state
                 small_state = next_small_state
-        
-            if i % 25 == 0:
-                print(f"Training Episode: {i}")
     
 
     def evaluate(self):
