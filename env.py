@@ -20,9 +20,9 @@ class SnakeEnv(Env):
         # 2: Food
 
         # Reward table
-        self.base_reward = -1
+        self.base_reward = 0
         self.food_reward = 100
-        self.food_distance_penalty = -1
+        self.food_distance_reward = 5
         self.game_over_reward = -10000
         self.game_win_reward = 10000
 
@@ -68,11 +68,20 @@ class SnakeEnv(Env):
         dy, dx = [new_pos[0] - self.food_location[0], new_pos[1] - self.food_location[1]]
         
         # Get the absolute distance (Positive)
-        distance = abs(dy) + abs(dx)
+        new_food_distance = abs(dy) + abs(dx)
 
-        # Calculate and apply penalty
-        penalty = distance * self.food_distance_penalty
-        reward += penalty
+        # Check if new food distance is is more or less than food distance.
+        # Apply appriopriate reward/penalty
+        if new_food_distance > self.food_distance:
+            # Penalty
+            reward += self.food_distance_reward * -1
+
+        else:
+            # Reward
+            reward += self.food_distance_reward
+
+        # Set new food distance as the food distance
+        self.food_distance = new_food_distance
 
 
         y, x = new_pos
@@ -151,6 +160,12 @@ class SnakeEnv(Env):
         # Set random snake direction
         self.snake_direction = 0 #randint(0, 4)
 
+        # Calculate food distance
+        dy, dx = [self.snake[0][0] - self.food_location[0], self.snake[0][1] - self.food_location[1]]
+        
+        # Get the absolute distance (Positive)
+        self.food_distance = abs(dy) + abs(dx)
+
         # Reset gif
         self.gif = []
 
@@ -159,9 +174,9 @@ class SnakeEnv(Env):
 
     def render(self):
         color_dictionary = {
-            1: (124,252,0),
+            1: (75, 150, 2),
             2: (139, 0, 0),
-            3: (75, 150, 2)
+            3: (124, 252, 0)
         }
         cell_size = 100
 
