@@ -239,7 +239,7 @@ class SnakeEnv(Env):
 
     def states(self):
         large_state = [self.snake_direction, self.board]
-        small_state = [self.snake_direction] + self.food_direction() + self.dangers() + [self.repeating_moves]
+        small_state = [self.snake_direction] + self.food_direction() + self.dangers() + self.repeating_moves
         return [large_state, small_state]
 
     def dangers(self):
@@ -299,4 +299,4 @@ class SnakeEnv(Env):
         else:
             x = 0
 
-        return [[y, x]]
+        return [y, x]

@@ -21,14 +21,15 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 100
+        self.training_size = 10
 
         # Train the model
         print("[!] Training Q Learning Model")
         self.train()
+        self.write_small_to_file()
 
         print("[!] Evaluating Q Learning Model")
-        self.episodes = 10
+        self.episodes = 25
         self.evaluate()
 
 
@@ -163,7 +164,12 @@ class QLearningModel:
         else:
             small_state_index = small_state_index[0]
 
-
         return large_state_index, small_state_index
+
+
+    def write_small_to_file(self):
+        np.save("q_learning_files/small_states_index", self.small_states_index)
+        np.save("q_learning_files/small_q_table", self.small_q_table)  
+        
 
 QLearningModel()
