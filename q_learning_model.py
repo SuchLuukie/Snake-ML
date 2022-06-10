@@ -20,8 +20,9 @@ class QLearningModel:
         self.id_states_index = []
         self.id_q_table = []
 
-
+        # To reset files
         self.write_model_to_file()
+        
         # Load the model from files
         self.load_model_from_file()
 
@@ -33,7 +34,7 @@ class QLearningModel:
         # Set training size
         self.training_size = 500
         self.total_trained = 0
-        self.eval_episodes = 50
+        self.eval_episodes = 10
 
         # Default gif file name
         self.gif_file_name = "game.gif"
@@ -44,13 +45,13 @@ class QLearningModel:
             self.train()
             self.total_trained += self.training_size
 
-            self.gif_file_name = str(self.total_trained)
 
             # Write to file
             self.write_model_to_file()
 
             # Evaluate and then render the best episode as gif
             print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
+            self.gif_file_name = str(self.total_trained)
             self.evaluate(render_best=True)
 
 

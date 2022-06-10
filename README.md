@@ -42,6 +42,6 @@ It will repeat this process N amount of times and I will document my findings
    (Will call this ID (Immediate Danger))
 
 # Showcase
-These gifs that will be shown will be the best game of 50 played.
+These gifs that will be shown will be the best game of 10 played.
 * Random Actions
 <img src="/gifs/random_actions.gif" width="450" height="300"/>
