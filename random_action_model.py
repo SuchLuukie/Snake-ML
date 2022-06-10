@@ -7,23 +7,28 @@ class RandomActionsModel:
         self.env = SnakeEnv()
 
         # Define amount of episodes
-        self.episodes = 10
+        self.eval_episodes = 10
 
-        self.evaluate()
+        self.gif_file_name = "random_actions"
+        self.evaluate(render_best=True)
 
 
-    def evaluate(self):
-        episode_dict = {}
+    # Main function that evaluates the model
+    def evaluate(self, render_best = False):
+        # Variables to keep track of evaluation
+        best_episode = None
         average = 0
-        for episode in range(self.episodes):
-            score, done, _ = 0, False, self.env.reset()
+
+        for episode in range(self.eval_episodes):
+            _, _ = self.env.reset()
+            score, done = 0, False
             
             while not done:
                 # Get a random action from the env
                 action = self.env.action_space.sample()
 
                 # Take the step in the env
-                _, reward, done = self.env.step(action)
+                _, _, reward, done = self.env.step(action)
 
                 # Apply reward
                 score += reward
@@ -31,31 +36,22 @@ class RandomActionsModel:
             # Add to the average
             average += score
 
-            # Print episode score
-            print(f"Episode: {episode}, Score: {score}")
-        
+            # Check if it's the best episode
+            if best_episode == None:
+                best_episode = [self.env, score]
 
-            # Add to dictionary
-            episode_dict.update({
-                episode: {
-                    "env": self.env,
-                    "score": score
-                }
-            })
+            else:
+                if score > best_episode[1]:
+                    best_episode = [self.env, score]
+
         
         # Calculate and print average score
-        average = int(average / self.episodes)
-        print(f"Episodes average: {average}")
+        average = int(average / self.eval_episodes)
+        print(f"[!] Episodes average: {average}")
 
-        # Get the best score
-        best_episode = episode_dict[0]
-        for episode in episode_dict:
-            if episode_dict[episode]["score"] > best_episode["score"]:
-                best_episode = episode_dict[episode]
-
-        print("\n[!] Best episode score: {}".format(best_episode["score"]))
-
-        # Save the best score gif
-        best_episode["env"].render_gif()
+        # If render is True it will save the gif to the file name "TrainingSessionAmount_Score.gif"
+        if render_best:
+            print("[!] Best episode score: {}".format(best_episode[1]))
+            best_episode[0].render_gif(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
 
 RandomActionsModel()

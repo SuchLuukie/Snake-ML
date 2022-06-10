@@ -49,6 +49,7 @@ class SnakeEnv(Env):
         self.max_game_length = 150
 
 
+    # Take a step in the env with the given action
     def step(self, action):
         # Update the gif
         self.gif.append(self.render())
@@ -149,6 +150,7 @@ class SnakeEnv(Env):
         return self.states() + [reward, False]
 
 
+    # Reset the env
     def reset(self):
         # Create the board and snake with a random starting position
         self.board = [[0 for j in range(self.board_width)] for i in range(self.board_height)]
@@ -178,6 +180,7 @@ class SnakeEnv(Env):
         return self.states()
 
 
+    # Render the current image of the board right now
     def render(self):
         color_dictionary = {
             1: (75, 150, 2),
@@ -207,12 +210,15 @@ class SnakeEnv(Env):
 
         return image
 
+
+    # Uses all the images in self.gifs and creates an animated gif
     def render_gif(self, location = "game.gif"):
         print("[!] Saving gif")
         imageio.mimsave(location, self.gif)
         print("[!] Gif saved")
 
 
+    # Spawn food on the board
     def spawn_food(self):
         # Get all open cells
         open_cells = [[y, x] for x in range(self.board_width) for y in range(self.board_height) if self.board[y][x] == 0]
@@ -229,12 +235,14 @@ class SnakeEnv(Env):
             return True
 
 
+    # States that the models will use
     def states(self):
         state = [self.snake_direction] + self.food_direction() + self.dangers()
         id_state = self.imminent_danger()
         return [state, id_state]
 
 
+    # An array of the distance to each dangerous cell, used by the states
     def dangers(self):
         # The directions that will be checked
         # We get the cardinal directions by using our direction as index (direction-1, direction, direction-3)
@@ -274,6 +282,8 @@ class SnakeEnv(Env):
 
         return dangers
 
+
+    # An array of booleans that will be True if the cell directly around the snake is dangerous. Used by states
     def imminent_danger(self):
         # The directions that will be checked
         # We get the cardinal directions by using our direction as index (direction-1, direction, direction-3)
@@ -312,6 +322,7 @@ class SnakeEnv(Env):
         return dangers
                 
 
+    # The direction of food, used by states
     def food_direction(self):
         y_distance = (self.snake[0][0] - self.food_location[0]) * -1
         x_distance = (self.snake[0][1] - self.food_location[1]) * -1

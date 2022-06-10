@@ -10,18 +10,12 @@ class QLearningModel:
         self.env = SnakeEnv()
 
         # Empty tables used for rewriting over the existing files (To reset)
-        #
         # Define the main tables
+        # id stands for imminent danger
         self.states_index = []
         self.q_table = []
-
-        # id stands for imminent danger
-        # These tables will receive a smaller state and will overrule the main q table
         self.id_states_index = []
         self.id_q_table = []
-
-        # To reset files
-        #self.write_model_to_file()
 
         # Load the model from files
         self.load_model_from_file()
@@ -33,19 +27,15 @@ class QLearningModel:
 
         # Set training size
         self.training_size = 500
-        self.total_trained = 2500
+        self.total_trained = 0
         self.eval_episodes = 10
 
-        # Default gif file name
-        self.gif_file_name = "game"
-        
-        for i in range(1):
-            break
+        # We train the model in 5 sections to save a gif of the best game at the end of that training
+        for i in range(5):
             # Train the model
             print("[!] Training Q Learning Model")
             self.train()
             self.total_trained += self.training_size
-
 
             # Write to file
             self.write_model_to_file()
@@ -54,11 +44,14 @@ class QLearningModel:
             print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
             self.gif_file_name = str(self.total_trained)
 
-        self.evaluate(render_best=True)
+            self.evaluate(render_best=True)
 
 
+    # Main function that trains the model
     def train(self):
+        # Used TQDM for a progressbar when training
         for i in tqdm(range(self.training_size), leave=False):
+            # Reset the env and define starter variables
             self.env.reset()
             reward, done = 0, False
             state, id_state = self.env.states()
@@ -102,7 +95,8 @@ class QLearningModel:
 
                 # New values
                 new_value = (1 - self.alpha) * old_value + self.alpha * (reward + self.gamma * next_max)
-                new_id_value = (1 - self.alpha) * old_id_value + self.alpha * (reward + self.gamma * next_id_max)
+                # Divide ID value by 2 to not overpower the main q learning table
+                new_id_value = ((1 - self.alpha) * old_id_value + self.alpha * (reward + self.gamma * next_id_max)) / 2
 
                 # Update new values
                 self.q_table[state_index][action] = new_value
@@ -113,10 +107,13 @@ class QLearningModel:
                 id_state = next_id_state
     
 
+    # Main function that evaluates the model
     def evaluate(self, render_best = False):
-        episode_dict = {}
+        # Variables to keep track of evaluation
+        best_episode = None
         average = 0
         for episode in range(self.eval_episodes):
+            # Reset the env and define starter variables
             self.env = SnakeEnv()
             state, id_state = self.env.reset()
             score, done = 0, False
@@ -141,33 +138,31 @@ class QLearningModel:
 
                 # Apply reward
                 score += reward
+                print(score)
 
             # Add to the average
             average += score
 
-            # Add to dictionary
-            episode_dict.update({
-                episode: {
-                    "env": self.env,
-                    "score": score
-                }
-            })
+            # Check if it's the best episode
+            if best_episode == None:
+                best_episode = [self.env, score]
+
+            else:
+                if score > best_episode[1]:
+                    best_episode = [self.env, score]
+
         
         # Calculate and print average score
         average = int(average / self.eval_episodes)
-        print(f"[!] Episode average: {average}")
+        print(f"[!] Episodes average: {average}")
 
+        # If render is True it will save the gif to the file name "TrainingSessionAmount_Score.gif"
         if render_best:
-            # Get the best score
-            best_episode = episode_dict[0]
-            for episode in episode_dict:
-                if episode_dict[episode]["score"] > best_episode["score"]:
-                    best_episode = episode_dict[episode]
-
-            print("[!] Best episode score: {}".format(best_episode["score"]))
-            best_episode["env"].render_gif(self.gif_file_name + "_" + str(best_episode["score"]) + ".gif")
+            print("[!] Best episode score: {}".format(best_episode[1]))
+            best_episode[0].render_gif(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
 
 
+    # Get the index location of where the given state is located in the q_table
     def get_state_index(self, state):
         state_index = [i for i in range(len(self.states_index)) if state == self.states_index[i]]
 
@@ -182,6 +177,7 @@ class QLearningModel:
         return state_index
 
 
+    # Get the index location of where the given state is located in the id_q_table
     def get_id_state_index(self, state):
         state_index = [i for i in range(len(self.id_states_index)) if state == self.id_states_index[i]]
 
@@ -195,13 +191,14 @@ class QLearningModel:
 
         return state_index
 
-
+    # Write the model to files
     def write_model_to_file(self):
         np.save("q_learning_files/states_index", self.states_index)
         np.save("q_learning_files/q_table", self.q_table)
         np.save("q_learning_files/id_q_table", self.id_q_table)
         np.save("q_learning_files/id_states_index", self.id_states_index)
         
+    # Load the model from files
     def load_model_from_file(self):
         self.q_table = np.load("q_learning_files/q_table.npy", allow_pickle=True).tolist()
         self.states_index = np.load("q_learning_files/states_index.npy", allow_pickle=True).tolist()

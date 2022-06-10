@@ -11,7 +11,7 @@ During training it will get the action values from the q learning table and grab
 The new q learning value will be calculated and adjusted into the table.
 It will repeat this process N amount of times and I will document my findings
 
-# Tasks.
+# Tasks of the model.
 * Quantify states <br/>
    First we quantify the states into an index that the tables will use.
    This is done by creating a seperate table that will contain all previous seen states and uses said index for the Q learning tables.
@@ -32,16 +32,30 @@ It will repeat this process N amount of times and I will document my findings
    One of the first things I noticed when training the Q Learning table was the snake being stuck in a loop,
    It basically made the same move (For instance left) for the entirety of the game. I assume this was because of the food distance reward/penalty. It received a +1 reward for moving closer to food and -1 when moving away. This made the snake continuously seek that +1 -1 reward. 
    
-   - To fix this I multiply the reward by -2 so it's a higher penalty when moving away than the reward when moving closer.
+   - To fix this I multiply the reward by -2 instead of -1, so it's a higher penalty when moving away than the reward when moving closer.
 
 * Simple mistakes
    In later games when the model has been training a few thousand times, I notice the model still making simple mistakes like turning into itself even though it knows there's danger there.
    I suspect this is because of if that specific state had not been seen then it has no clue on what is a good or bad move in that situation.
    
-   - To fix this I'm going to be adding a second smaller q table that will take the directions of the normal state and  check if there are immediate dangers 1 cell ahead/around itself
-   (Will call this ID (Immediate Danger))
+   - To fix this I'm going to be adding a second smaller q table that will take the directions of the normal state and check if there are immediate dangers 1 cell ahead/around itself (Will call this ID (Immediate Danger)).
+   The ID q learning value will be divided by half to prevent it from overpowering the main q learning table. The main and ID q learning values will be added together and then the highest value action will be picked.
+
+   - Note: This turned out to be a great succes, with this second table it's making a lot better and consistent choices.
+   The average scores are exceeding 5 times the amount with 1 table, and that also in 1/5 the amount of training games.
+   (Games do take a lot longer since the agent stays alive longer)
+
+* Upper limits of the model
+   I was curious on the limitation of what the model was so I ran multiple env's with the max game step set to an infinite amount and the upper limit that I saw was around 4000-5000, for obvious reason's I can't show a gif of that since it exceeded more than 2000 game steps. 
+
+   - Note: The high score of 4000-5000 exceeded my expectations and I'm thoroughly satisfied with my first Q Learning model.
 
 # Showcase
-These gifs that will be shown will be the best game of 10 played.
+These gifs that will be shown will be the best game of 10 played with an interval of 500 training games.
+
+* Version two, uses the main and ID Q learning table:
+
+* Version one, only uses the main Q learning table:
+
 * Random Actions
 <img src="/gifs/random_actions.gif" width="360" height="240"/>
