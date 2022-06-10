@@ -44,4 +44,4 @@ It will repeat this process N amount of times and I will document my findings
 # Showcase
 These gifs that will be shown will be the best game of 10 played.
 * Random Actions
-<img src="/gifs/random_actions.gif" width="450" height="300"/>
+<img src="/gifs/random_actions.gif" width="360" height="240"/>
