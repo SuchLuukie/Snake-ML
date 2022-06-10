@@ -21,8 +21,8 @@ class QLearningModel:
         self.id_q_table = []
 
         # To reset files
-        self.write_model_to_file()
-        
+        #self.write_model_to_file()
+
         # Load the model from files
         self.load_model_from_file()
 
@@ -33,13 +33,14 @@ class QLearningModel:
 
         # Set training size
         self.training_size = 500
-        self.total_trained = 0
+        self.total_trained = 2500
         self.eval_episodes = 10
 
         # Default gif file name
-        self.gif_file_name = "game.gif"
+        self.gif_file_name = "game"
         
         for i in range(5):
+            break
             # Train the model
             print("[!] Training Q Learning Model")
             self.train()
@@ -52,7 +53,7 @@ class QLearningModel:
             # Evaluate and then render the best episode as gif
             print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
             self.gif_file_name = str(self.total_trained)
-            self.evaluate(render_best=True)
+        self.evaluate(render_best=True)
 
 
     def train(self):
@@ -79,7 +80,7 @@ class QLearningModel:
                     id_actions = self.id_q_table[id_state_index]
 
                     # Combine the 2 action values to determine best move
-                    #[actions[i] + id_actions[i] for i in range(len(actions))]
+                    [actions[i] + id_actions[i] for i in range(len(actions))]
 
                     # Get the action with the highest value
                     action = np.argmax(actions)
@@ -129,7 +130,7 @@ class QLearningModel:
                 id_actions = self.id_q_table[id_state_index]
 
                 # Combine the 2 state action values
-                #[actions[i] + id_actions[i] for i in range(len(actions))]
+                [actions[i] + id_actions[i] for i in range(len(actions))]
 
                 # Get the highest valued action
                 action = np.argmax(actions)
