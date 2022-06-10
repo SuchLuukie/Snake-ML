@@ -54,18 +54,22 @@ It will repeat this process N amount of times and I will document my findings
 These gifs that will be shown will be the best game of 10 played with an interval of 500 training games.
 
 * Version two, uses the main and ID Q learning table:
-<img src="/gifs/new_version_gifs/game_1.gif" width="360" height="240"/>
-<img src="/gifs/new_version_gifs/game_2.gif" width="360" height="240"/>
-<img src="/gifs/new_version_gifs/game_3.gif" width="360" height="240"/>
-<img src="/gifs/new_version_gifs/game_4.gif" width="360" height="240"/>
-<img src="/gifs/new_version_gifs/game_5.gif" width="360" height="240"/>
+<p float="left">
+   <img src="/gifs/new_version_gifs/game_1.gif" width="360" height="240"/>
+   <img src="/gifs/new_version_gifs/game_2.gif" width="360" height="240"/>
+   <img src="/gifs/new_version_gifs/game_3.gif" width="360" height="240"/>
+   <img src="/gifs/new_version_gifs/game_4.gif" width="360" height="240"/>
+   <img src="/gifs/new_version_gifs/game_5.gif" width="360" height="240"/>
+</p>
 
 * Version one, only uses the main Q learning table:
-<img src="/gifs/old_version_gifs/game_1.gif" width="360" height="240"/>
-<img src="/gifs/old_version_gifs/game_2.gif" width="360" height="240"/>
-<img src="/gifs/old_version_gifs/game_3.gif" width="360" height="240"/>
-<img src="/gifs/old_version_gifs/game_4.gif" width="360" height="240"/>
-<img src="/gifs/old_version_gifs/game_5.gif" width="360" height="240"/>
+<p float="left">
+   <img src="/gifs/old_version_gifs/game_1.gif" width="360" height="240"/>
+   <img src="/gifs/old_version_gifs/game_2.gif" width="360" height="240"/>
+   <img src="/gifs/old_version_gifs/game_3.gif" width="360" height="240"/>
+   <img src="/gifs/old_version_gifs/game_4.gif" width="360" height="240"/>
+   <img src="/gifs/old_version_gifs/game_5.gif" width="360" height="240"/>
+</p>
 
 * Random Actions
 <img src="/gifs/random_actions.gif" width="360" height="240"/>
