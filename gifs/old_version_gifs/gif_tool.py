@@ -10,7 +10,7 @@ new_location = 'gifs/old_version_gifs/game_1.gif'
 font_size = 20
 font = ImageFont.truetype("calibri.ttf", font_size)
 color = (83, 83, 83)
-dimensions = (600, 400)
+dimensions = (480, 320)
 offset_y = 20
 
 offset_x = 50

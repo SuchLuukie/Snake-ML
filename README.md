@@ -58,4 +58,4 @@ These gifs that will be shown will be the best game of 10 played with an interva
 * Version one, only uses the main Q learning table:
 
 * Random Actions
-<img src="/gifs/random_actions.gif" width="360" height="240"/>
+<img src="/gifs/old_version_gifs/game_1.gif" width="360" height="240"/>
