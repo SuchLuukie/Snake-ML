@@ -9,11 +9,21 @@ class QLearningModel:
         # Define env
         self.env = SnakeEnv()
 
-        # Define the tables
-        self.large_states_index = []
-        self.small_states_index = []
-        self.large_q_table = []
-        self.small_q_table = []
+        # Empty tables used for rewriting over the existing files (To reset)
+        #
+        # Define the main tables
+        self.states_index = []
+        self.q_table = []
+
+        # id stands for imminent danger
+        # These tables will receive a smaller state and will overrule the main q table
+        self.id_states_index = []
+        self.id_q_table = []
+
+
+        self.write_model_to_file()
+        # Load the model from files
+        self.load_model_from_file()
 
         # Hyperparameters
         self.alpha = 0.1
@@ -21,109 +31,116 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 1000
+        self.training_size = 500
+        self.total_trained = 0
+        self.eval_episodes = 50
 
-        # Train the model
-        print("[!] Training Q Learning Model")
-        #self.train()
-        #self.write_small_to_file()
+        # Default gif file name
+        self.gif_file_name = "game.gif"
+        
+        for i in range(5):
+            # Train the model
+            print("[!] Training Q Learning Model")
+            self.train()
+            self.total_trained += self.training_size
 
-        self.small_states_index = np.load("q_learning_files/small_states_index.npy", allow_pickle=True).tolist()
-        self.small_q_table = np.load("q_learning_files/small_q_table.npy", allow_pickle=True).tolist()
+            self.gif_file_name = str(self.total_trained)
 
-        print("[!] Evaluating Q Learning Model")
-        self.episodes = 1
-        self.evaluate()
+            # Write to file
+            self.write_model_to_file()
+
+            # Evaluate and then render the best episode as gif
+            print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
+            self.evaluate(render_best=True)
 
 
     def train(self):
-        for i in tqdm(range(self.training_size)):
+        for i in tqdm(range(self.training_size), leave=False):
             self.env.reset()
             reward, done = 0, False
-            large_state, small_state = self.env.states()
+            state, id_state = self.env.states()
 
             while not done:
-                # Get table indexes
-                large_state_index, small_state_index = self.get_states_index(large_state, small_state)
+                # Get state index
+                state_index = self.get_state_index(state)
+                id_state_index = self.get_id_state_index(id_state)
 
                 # Explores action space
                 if random.uniform(0, 1) < self.epsilon:
                     action = self.env.action_space.sample()
 
-                # Exploit previously learned value
+                # Explots q learning
                 else:
-                    #large_state_actions = self.large_q_table[large_state_index]
-                    small_state_actions = self.small_q_table[small_state_index]
-                    action = np.argmax(small_state_actions)
+                    # Get normal state actions
+                    actions = self.q_table[state_index]
 
-                    # If large state actions are all 0 then look at small_state actions
-                    #if len([i for i in large_state_actions if i != 0]) == 0:
-                    #    action = np.argmax(small_state_actions)
-                    
-                    # Otherwise just use the large state actions
-                    #else:
-                    #    action = np.argmax(large_state_actions)
+                    # Get id state actions
+                    id_actions = self.id_q_table[id_state_index]
+
+                    # Combine the 2 action values to determine best move
+                    #[actions[i] + id_actions[i] for i in range(len(actions))]
+
+                    # Get the action with the highest value
+                    action = np.argmax(actions)
+
 
                 # Take the next step in the env
-                next_large_state, next_small_state, reward, done = self.env.step(action)
-                next_large_state_index, next_small_state_index = self.get_states_index(next_large_state, next_small_state)
+                next_state, next_id_state, reward, done = self.env.step(action)
+                next_state_index = self.get_state_index(next_state)
+                next_id_state_index = self.get_id_state_index(next_id_state)
 
                 # Old Q table values
-                #old_large_value = self.large_q_table[large_state_index][action]
-                old_small_value = self.small_q_table[small_state_index][action]
+                old_value = self.q_table[state_index][action]
+                old_id_value = self.id_q_table[id_state_index][action]
 
                 # Next Q table values
-                #next_large_max = max(self.large_q_table[next_large_state_index])
-                next_small_max = max(self.small_q_table[next_small_state_index])
+                next_max = max(self.q_table[next_state_index])
+                next_id_max = max(self.id_q_table[next_id_state_index])
 
                 # New values
-                #new_large_value = (1 - self.alpha) * old_large_value + self.alpha * (reward + self.gamma * next_large_max)
-                new_small_value = (1 - self.alpha) * old_small_value + self.alpha * (reward + self.gamma * next_small_max)
+                new_value = (1 - self.alpha) * old_value + self.alpha * (reward + self.gamma * next_max)
+                new_id_value = (1 - self.alpha) * old_id_value + self.alpha * (reward + self.gamma * next_id_max)
 
                 # Update new values
-                #self.large_q_table[large_state_index][action] = new_large_value
-                self.small_q_table[small_state_index][action] = new_small_value
+                self.q_table[state_index][action] = new_value
+                self.id_q_table[id_state_index][action] = new_id_value
 
                 # Ready for next iteration
-                #large_state = next_large_state
-                small_state = next_small_state
+                state = next_state
+                id_state = next_id_state
     
 
-    def evaluate(self):
+    def evaluate(self, render_best = False):
         episode_dict = {}
         average = 0
-        for episode in range(self.episodes):
+        for episode in range(self.eval_episodes):
             self.env = SnakeEnv()
-            large_state, small_state = self.env.reset()
+            state, id_state = self.env.reset()
             score, done = 0, False
 
             while not done:
                 # Get table indexes for the given states
-                large_state_index, small_state_index = self.get_states_index(large_state, small_state)
+                state_index = self.get_state_index(state)
+                id_state_index = self.get_id_state_index(id_state)
 
                 # Get the actions for the given states
-                large_state_actions = self.large_q_table[large_state_index]
-                small_state_actions = self.small_q_table[small_state_index]
+                actions = self.q_table[state_index]
+                id_actions = self.id_q_table[id_state_index]
 
-                # If large state actions are all 0 then look at small_state actions
-                if len([i for i in large_state_actions if i != 0]) == 0:
-                    action = np.argmax(small_state_actions)
-                
-                # Otherwise just use the large state actions
-                else:
-                    action = np.argmax(large_state_actions)
+                # Combine the 2 state action values
+                #[actions[i] + id_actions[i] for i in range(len(actions))]
+
+                # Get the highest valued action
+                action = np.argmax(actions)
 
                 # Take the step in the env
-                large_state, small_state, reward, done = self.env.step(action)
+                state, id_state, reward, done = self.env.step(action)
 
                 # Apply reward
                 score += reward
 
             # Add to the average
             average += score
-
-            # Print episode score
-            print(f"Episode: {episode}, Score: {score}")
 
             # Add to dictionary
             episode_dict.update({
@@ -134,45 +151,59 @@ class QLearningModel:
             })
         
         # Calculate and print average score
-        average = average / self.episodes
-        print(f"Episodes average: {average}")
+        average = int(average / self.eval_episodes)
+        print(f"[!] Episode average: {average}")
 
-        # Get the best score
-        best_episode = episode_dict[0]
-        for episode in episode_dict:
-            if episode_dict[episode]["score"] > best_episode["score"]:
-                best_episode = episode_dict[episode]
+        if render_best:
+            # Get the best score
+            best_episode = episode_dict[0]
+            for episode in episode_dict:
+                if episode_dict[episode]["score"] > best_episode["score"]:
+                    best_episode = episode_dict[episode]
 
-        print("[!] Best episode score: {}".format(best_episode["score"]))
-        best_episode["env"].render_gif()
-
-
-    def get_states_index(self, large_state, small_state):
-        large_state_index = [i for i in range(len(self.large_states_index)) if large_state == self.large_states_index[i]]
-        small_state_index = [i for i in range(len(self.small_states_index)) if small_state == self.small_states_index[i]]
+            print("[!] Best episode score: {}".format(best_episode["score"]))
+            best_episode["env"].render_gif(self.gif_file_name + "_" + str(best_episode["score"]) + ".gif")
 
 
-        if large_state_index == []:
-            self.large_states_index.append(large_state)
-            large_state_index = len(self.large_states_index) - 1
-            self.large_q_table.append([0 for i in range(self.env.action_space.n)])
-        else:
-            large_state_index = large_state_index[0]
+    def get_state_index(self, state):
+        state_index = [i for i in range(len(self.states_index)) if state == self.states_index[i]]
 
-
-        if small_state_index == []:
-            self.small_states_index.append(small_state)
-            small_state_index = len(self.small_states_index) - 1
-            self.small_q_table.append([0 for i in range(self.env.action_space.n)])
-        else:
-            small_state_index = small_state_index[0]
-
-        return large_state_index, small_state_index
-
-
-    def write_small_to_file(self):
-        np.save("q_learning_files/small_states_index", self.small_states_index)
-        np.save("q_learning_files/small_q_table", self.small_q_table)  
+        if state_index == []:
+            self.states_index.append(state)
+            state_index = len(self.states_index) - 1
+            self.q_table.append([0 for i in range(self.env.action_space.n)])
         
+        else:
+            state_index = state_index[0]
+
+        return state_index
+
+
+    def get_id_state_index(self, state):
+        state_index = [i for i in range(len(self.id_states_index)) if state == self.id_states_index[i]]
+
+        if state_index == []:
+            self.id_states_index.append(state)
+            state_index = len(self.id_states_index) - 1
+            self.id_q_table.append([0 for i in range(self.env.action_space.n)])
+        
+        else:
+            state_index = state_index[0]
+
+        return state_index
+
+
+    def write_model_to_file(self):
+        np.save("q_learning_files/states_index", self.states_index)
+        np.save("q_learning_files/q_table", self.q_table)
+        np.save("q_learning_files/id_q_table", self.id_q_table)
+        np.save("q_learning_files/id_states_index", self.id_states_index)
+        
+    def load_model_from_file(self):
+        self.q_table = np.load("q_learning_files/q_table.npy", allow_pickle=True).tolist()
+        self.states_index = np.load("q_learning_files/states_index.npy", allow_pickle=True).tolist()
+        self.id_q_table = np.load("q_learning_files/id_q_table.npy", allow_pickle=True).tolist()
+        self.id_states_index = np.load("q_learning_files/id_states_index.npy", allow_pickle=True).tolist()
+
 
 QLearningModel()

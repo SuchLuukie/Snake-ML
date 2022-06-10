@@ -23,13 +23,9 @@ class SnakeEnv(Env):
         self.base_reward = 0
         self.food_reward = 100
         self.food_distance_reward = 5
-        self.food_consume_game_step_remove = -10
-        self.game_over_reward = -10000
-        self.game_win_reward = 10000
-
-        self.max_repeating_move = 30
-        self.repeating_penalty_trigger = 8
-        self.repeating_penalty = -100
+        self.food_consume_game_step_remove = -20
+        self.game_over_reward = -1000
+        self.game_win_reward = 1000
 
         # Actions: From snake direction go left, up or right
         self.action_space = Discrete(3)
@@ -38,6 +34,12 @@ class SnakeEnv(Env):
             [0, 1],  # Right
             [1, 0],  # Down
             [0, -1]  # Left
+        ]
+        self.diagonals = [
+            [-1, 1], # Top right
+            [1, 1],  # Bottom right
+            [1, -1], # Bottom left
+            [-1, -1]  # Top left
         ]
 
         # Observastion space
@@ -77,7 +79,7 @@ class SnakeEnv(Env):
         # Apply appriopriate reward/penalty
         if new_food_distance > self.food_distance:
             # Penalty
-            reward += self.food_distance_reward * -1
+            reward += self.food_distance_reward * -2
 
         else:
             # Reward
@@ -85,22 +87,6 @@ class SnakeEnv(Env):
 
         # Set new food distance as the food distance
         self.food_distance = new_food_distance
-
-        # Check for repeating moves
-        if not action == self.repeating_moves[0]:
-            self.repeating_moves = [action, 0]
-
-        else:
-            # If it is a repeating move
-            self.repeating_moves[1] += 1
-            if self.repeating_moves[1] >= self.repeating_penalty_trigger and action != 1:
-                # Discourage it
-                reward += self.repeating_penalty
-
-                if self.repeating_moves[1] == self.max_repeating_move:
-                    reward += self.game_over_reward
-                    done = True
-                    return self.states() + [reward, done]
 
 
         y, x = new_pos
@@ -186,9 +172,6 @@ class SnakeEnv(Env):
         # Get the absolute distance (Positive)
         self.food_distance = abs(dy) + abs(dx)
 
-        # Reset repeating moves
-        self.repeating_moves = [None, 0]
-
         # Reset gif
         self.gif = []
 
@@ -207,16 +190,20 @@ class SnakeEnv(Env):
         image = Image.new("RGB", (len(self.board[0])*cell_size, len(self.board)*cell_size), (17,17,17))
         draw = ImageDraw.Draw(image)
 
-        # Draw the food and snake
-        for y, row in enumerate(self.board):
-            for x, color in enumerate(row):
-                if color != 0:
-                    # Check if it's the head of the snake
-                    if [y, x] == self.snake[0]:
-                        color = 3
+        # Draw the snake
+        for idx, bit in enumerate(self.snake):
+            color = 1
+            if idx == 0:
+                color = 3
 
-                    shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
-                    draw.rectangle(shape, fill=color_dictionary[color])
+            y, x = bit
+            shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
+            draw.rectangle(shape, fill=color_dictionary[color])
+
+        # Draw the food
+        y, x = self.food_location
+        shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
+        draw.rectangle(shape, fill=color_dictionary[2])
 
         return image
 
@@ -243,22 +230,26 @@ class SnakeEnv(Env):
 
 
     def states(self):
-        large_state = [self.snake_direction, self.board]
-        small_state = [self.snake_direction] + self.food_direction() + self.dangers() + self.repeating_moves
-        print(small_state)
-        return [large_state, small_state]
+        state = [self.snake_direction] + self.food_direction() + self.dangers()
+        id_state = self.imminent_danger()
+        return [state, id_state]
+
 
     def dangers(self):
+        # The directions that will be checked
+        # We get the cardinal directions by using our direction as index (direction-1, direction, direction-3)
+        # We get the diagonals by using our direction as index (direction, direction-1)
+        directions = [
+            self.actions[self.snake_direction-1],
+            self.diagonals[self.snake_direction-1],
+            self.actions[self.snake_direction], 
+            self.diagonals[self.snake_direction],
+            self.actions[self.snake_direction-3]
+        ]
+
         dangers = []
-
-        # The direction of the snake (Ordered by the currents snake direction)
-        directional_actions = [self.actions[self.snake_direction-1], self.actions[self.snake_direction], self.actions[self.snake_direction-3]]
-
-        # Snake head from where the danger is calculated
-        snake_head = self.snake[0]
-
-        for direction in directional_actions:
-            old_pos = snake_head
+        for direction in directions:
+            old_pos = self.snake[0]
             found_danger = False
             danger_distance = 0
 
@@ -273,15 +264,53 @@ class SnakeEnv(Env):
                     found_danger = True
 
                 # Check if the new pos is occupied by the snake
-                elif self.board[y][x] == 1:
+                elif new_pos in self.snake:
                     # If it is occupied by the snake then it's the danger
                     dangers.append(danger_distance)
                     found_danger = True
-                
+
                 old_pos = new_pos
                 danger_distance += 1
 
         return dangers
+
+    def imminent_danger(self):
+        # The directions that will be checked
+        # We get the cardinal directions by using our direction as index (direction-1, direction, direction-3)
+        # We get the diagonals by using our direction as index (direction, direction-1)
+        directions = [
+            self.actions[self.snake_direction-1],
+            self.diagonals[self.snake_direction-1],
+            self.actions[self.snake_direction], 
+            self.diagonals[self.snake_direction],
+            self.actions[self.snake_direction-3]
+        ]
+
+        # Origin will be where the danger will be check + the direction offset
+        origin = self.snake[0]
+
+        # If it is dangerous that it will be True, if not False
+        dangers = []
+
+        for direction in directions:
+            location = [origin[0] + direction[0], origin[1] + direction[1]]
+            y, x = location
+                
+            # Check if the location is inside the board
+            if y < 0 or y >= self.board_height or x < 0 or x >= self.board_width:
+                # Not in the board, so this is the danger
+                dangers.append(True)
+
+            # If the location is occupied by the snake then it's also a danger
+            elif location in self.snake:
+                dangers.append(True)
+
+            # Otherwise it's not a danger
+            else:
+                dangers.append(False)
+
+        return dangers
+                
 
     def food_direction(self):
         y_distance = (self.snake[0][0] - self.food_location[0]) * -1

@@ -23,7 +23,7 @@ class RandomActionsModel:
                 action = self.env.action_space.sample()
 
                 # Take the step in the env
-                _, _, reward, done = self.env.step(action)
+                _, reward, done = self.env.step(action)
 
                 # Apply reward
                 score += reward
@@ -44,7 +44,7 @@ class RandomActionsModel:
             })
         
         # Calculate and print average score
-        average = average / self.episodes
+        average = int(average / self.episodes)
         print(f"Episodes average: {average}")
 
         # Get the best score
