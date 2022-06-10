@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageSequence, ImageFont
+from PIL import Image, ImageDraw, ImageSequence, ImageFont, ImageFilter
 import io
 
 im = Image.open('gifs/old_version_gifs/500_-60.gif')
@@ -7,10 +7,10 @@ score_msg = "total score: -60"
 new_location = 'gifs/old_version_gifs/game_1.gif'
 
 
-font_size = 20
-font = ImageFont.truetype("calibri.ttf", font_size)
-color = (83, 83, 83)
-dimensions = (480, 320)
+font_size = 40
+font = font_size#ImageFont.truetype("calibri.ttf", font_size)
+color = (160, 160, 160)
+dimensions = (420, 280)
 offset_y = 20
 
 offset_x = 50
@@ -21,6 +21,7 @@ frames = []
 # Loop over each frame in the animated image
 for frame in ImageSequence.Iterator(im):
     frame = frame.resize(dimensions, Image.ANTIALIAS)
+
     draw = ImageDraw.Draw(frame)
 
     game_location = tuple([(dimensions[0]-draw.textsize(game_msg)[0])/2, (dimensions[1]-draw.textsize(game_msg)[1])/2 - offset_x])
@@ -31,6 +32,8 @@ for frame in ImageSequence.Iterator(im):
     draw.text(score_location, score_msg, size=font, align="center", fill=color)
     del draw
 
+    frame = frame.convert("RGB")
+    frame = frame.filter(ImageFilter.SHARPEN)
     # However, 'frame' is still the animated image with many frames
     # It has simply been seeked to a later frame
     # For our list of frames, we only want the current frame
