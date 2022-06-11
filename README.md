@@ -34,7 +34,7 @@ It will repeat this process N amount of times and I will document my findings
    
    - To fix this I multiply the reward by -2 instead of -1, so it's a higher penalty when moving away than the reward when moving closer.
 
-* Simple mistakes
+* Simple mistakes.
    In later games when the model has been training a few thousand times, I notice the model still making simple mistakes like turning into itself even though it knows there's danger there.
    I suspect this is because of if that specific state had not been seen then it has no clue on what is a good or bad move in that situation.
    
@@ -45,7 +45,7 @@ It will repeat this process N amount of times and I will document my findings
    The average scores are exceeding 5 times the amount with 1 table, and that also in 1/5 the amount of training games.
    (Games do take a lot longer since the agent stays alive longer)
 
-* Upper limits of the model
+* Upper limits of the model.
    I was curious on the limitation of what the model was so I ran multiple env's with the max game step set to an infinite amount and the upper limit that I saw was around 4000-5000, for obvious reason's I can't show a gif of that since it exceeded more than 2000 game steps. 
 
    - Note: The high score of 4000-5000 exceeded my expectations and I'm thoroughly satisfied with my first Q Learning model.
