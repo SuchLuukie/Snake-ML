@@ -1,5 +1,4 @@
 # Import libraries
-import imageio
 import numpy as np
 from gym import Env
 from gym.spaces import Discrete, Box
@@ -51,8 +50,8 @@ class SnakeEnv(Env):
 
     # Take a step in the env with the given action
     def step(self, action):
-        # Update the gif
-        self.gif.append(self.render())
+        # Update the history
+        self.history.append([self.food_location, self.snake])
 
         # ------ Snake direction and new pos ------
         # The direction of the snake (Ordered by the currents snake direction)
@@ -174,47 +173,49 @@ class SnakeEnv(Env):
         # Get the absolute distance (Positive)
         self.food_distance = abs(dy) + abs(dx)
 
-        # Reset gif
-        self.gif = []
+        # Reset history
+        self.history = []
 
         return self.states()
 
 
-    # Render the current image of the board right now
-    def render(self):
+    # Render the history into a gif
+
+    def render(self, location="game.gif"):
         color_dictionary = {
             1: (75, 150, 2),
             2: (139, 0, 0),
             3: (124, 252, 0)
         }
-        cell_size = 100
+        cell_size = 12
 
-        # Create image of the correct dimension and prepare for draw
-        image = Image.new("RGB", (len(self.board[0])*cell_size, len(self.board)*cell_size), (17,17,17))
-        draw = ImageDraw.Draw(image)
+        gif = []
+        for frame in self.history:
+            food, snake = frame
 
-        # Draw the snake
-        for idx, bit in enumerate(self.snake):
-            color = 1
-            if idx == 0:
-                color = 3
+            # Create image of the correct dimension and prepare for draw
+            image = Image.new("RGB", (len(self.board[0])*cell_size, len(self.board)*cell_size), (17,17,17))
+            draw = ImageDraw.Draw(image)
 
-            y, x = bit
+            # Draw the snake
+            for idx, bit in enumerate(snake):
+                color = 1
+                if idx == 0:
+                    color = 3
+
+                y, x = bit
+                shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
+                draw.rectangle(shape, fill=color_dictionary[color])
+
+            # Draw the food
+            y, x = food
             shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
-            draw.rectangle(shape, fill=color_dictionary[color])
+            draw.rectangle(shape, fill=color_dictionary[2])
 
-        # Draw the food
-        y, x = self.food_location
-        shape = [x*cell_size, y*cell_size, x*cell_size+cell_size, y*cell_size+cell_size]
-        draw.rectangle(shape, fill=color_dictionary[2])
+            gif.append(image.copy())
 
-        return image
-
-
-    # Uses all the images in self.gifs and creates an animated gif
-    def render_gif(self, location = "game.gif"):
-        print("[!] Saving gif")
-        imageio.mimsave(location, self.gif)
+        # Render the gif
+        gif[0].save(location, save_all=True, append_images=self.gif[1:], loop=0)
         print("[!] Gif saved")
 
 

@@ -52,6 +52,6 @@ class RandomActionsModel:
         # If render is True it will save the gif to the file name "TrainingSessionAmount_Score.gif"
         if render_best:
             print("[!] Best episode score: {}".format(best_episode[1]))
-            best_episode[0].render_gif(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
+            best_episode[0].render(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
 
 RandomActionsModel()

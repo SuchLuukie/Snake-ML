@@ -26,7 +26,7 @@ class QLearningModel:
         self.epsilon = 0.1
 
         # Set training size
-        self.training_size = 500
+        self.training_size = 100
         self.total_trained = 0
         self.eval_episodes = 10
 
@@ -105,7 +105,6 @@ class QLearningModel:
                 # Ready for next iteration
                 state = next_state
                 id_state = next_id_state
-    
 
     # Main function that evaluates the model
     def evaluate(self, render_best = False):
@@ -138,7 +137,6 @@ class QLearningModel:
 
                 # Apply reward
                 score += reward
-                print(score)
 
             # Add to the average
             average += score
@@ -159,7 +157,7 @@ class QLearningModel:
         # If render is True it will save the gif to the file name "TrainingSessionAmount_Score.gif"
         if render_best:
             print("[!] Best episode score: {}".format(best_episode[1]))
-            best_episode[0].render_gif(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
+            best_episode[0].render(self.gif_file_name + "_" + str(best_episode[1]) + ".gif")
 
 
     # Get the index location of where the given state is located in the q_table
