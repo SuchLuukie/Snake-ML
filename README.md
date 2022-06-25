@@ -60,6 +60,7 @@ These gifs that will be shown will be the best game of 10 played with an interva
    <img src="/gifs/new_version_gifs/game_3.gif" width="360" height="240"/>
    <img src="/gifs/new_version_gifs/game_4.gif" width="360" height="240"/>
    <img src="/gifs/new_version_gifs/game_5.gif" width="360" height="240"/>
+   <img src="/gifs/new_version_gifs/game_6.gif" width="360" height="240"/>
 </p>
 
 * Version one, only uses the main Q learning table:

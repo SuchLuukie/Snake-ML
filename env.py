@@ -22,7 +22,7 @@ class SnakeEnv(Env):
         self.base_reward = 0
         self.food_reward = 100
         self.food_distance_reward = 5
-        self.food_consume_game_step_remove = -20
+        self.food_consume_game_step_remove = -40
         self.game_over_reward = -1000
         self.game_win_reward = 1000
 
@@ -51,7 +51,7 @@ class SnakeEnv(Env):
     # Take a step in the env with the given action
     def step(self, action):
         # Update the history
-        self.history.append([self.food_location, self.snake])
+        self.history.append([self.food_location.copy(), self.snake.copy()])
 
         # ------ Snake direction and new pos ------
         # The direction of the snake (Ordered by the currents snake direction)

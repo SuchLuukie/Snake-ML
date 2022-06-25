@@ -27,24 +27,26 @@ class QLearningModel:
 
         # Set training size
         self.training_size = 100
-        self.total_trained = 0
+        self.total_trained = 3500
         self.eval_episodes = 10
 
-        # We train the model in 5 sections to save a gif of the best game at the end of that training
-        for i in range(5):
-            # Train the model
-            print("[!] Training Q Learning Model")
-            self.train()
-            self.total_trained += self.training_size
 
-            # Write to file
-            self.write_model_to_file()
+        if __name__ == "__main__":
+            # We train the model in 5 sections to save a gif of the best game at the end of that training
+            for i in range(5):
+                # Train the model
+                print("[!] Training Q Learning Model")
+                self.train()
+                self.total_trained += self.training_size
 
-            # Evaluate and then render the best episode as gif
-            print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
-            self.gif_file_name = str(self.total_trained)
+                # Write to file
+                self.write_model_to_file()
 
-            self.evaluate(render_best=True)
+                # Evaluate and then render the best episode as gif
+                print(f"[!] Evaluating Q Learning Model after {self.total_trained} training games.")
+                self.gif_file_name = str(self.total_trained)
+
+                self.evaluate(render_best=True)
 
 
     # Main function that trains the model
