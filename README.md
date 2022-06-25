@@ -46,9 +46,9 @@ It will repeat this process N amount of times and I will document my findings
    (Games do take a lot longer since the agent stays alive longer)
 
 * Upper limits of the model.
-   I was curious on the limitation of what the model was so I ran multiple env's with the max game step set to an infinite amount and the upper limit that I saw was around 4000-5000, for obvious reason's I can't show a gif of that since it exceeded more than 2000 game steps. 
+   I was curious on the limitation of what the model was so I ran multiple env's with the max game step set to an infinite amount and the upper limit that I saw was around 6500, for obvious reason's I can't show a gif of that since it exceeded more than 2000 game steps. (Might come back and train the model further to see any more improvement)
 
-   - Note: The high score of 4000-5000 exceeded my expectations and I'm thoroughly satisfied with my first Q Learning model.
+   - Note: The high score of 6500 exceeded my expectations and I'm thoroughly satisfied with my first Q Learning model.
 
 # Showcase
 These gifs that will be shown will be the best game of 10 played with an interval of 500 training games.
