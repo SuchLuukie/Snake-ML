@@ -215,7 +215,7 @@ class SnakeEnv(Env):
             gif.append(image.copy())
 
         # Render the gif
-        gif[0].save(location, save_all=True, append_images=self.gif[1:], loop=0)
+        gif[0].save(location, save_all=True, append_images=gif[1:], loop=0)
         print("[!] Gif saved")
 
 
